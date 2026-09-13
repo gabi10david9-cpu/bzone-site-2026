@@ -4,19 +4,300 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>B_ZONE // SECURE SHELL</title>
-<link rel="stylesheet" href="/css/style.css">
+<style>
+  :root{
+    --void:#020403; --bg:#050a07; --panel:#081410; --panel-2:#0c1a14;
+    --line:#123321; --line-soft:#0a2417;
+    --green:#4bf5a0; --green-dim:#1f7a4e; --green-deep:#0e3e26;
+    --amber:#f0a83f; --red:#ef5b48;
+    --text:#d7f7e6; --text-dim:#5c8971;
+    --font: "Berkeley Mono","IBM Plex Mono","JetBrains Mono","SF Mono","Consolas","Courier New",monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; height:100%; background:var(--void); font-family:var(--font); color:var(--text); overflow:hidden; -webkit-font-smoothing:antialiased; }
+
+  #crt{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:22px; }
+  #frame{
+    position:relative; width:100%; height:100%; max-width:1180px;
+    background:var(--bg); border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 0 0 1px #000, 0 40px 90px -30px rgba(0,0,0,.9), inset 0 0 90px rgba(0,0,0,.55);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  #frame::after{ content:""; position:absolute; inset:0; background:repeating-linear-gradient(to bottom, rgba(75,245,160,.035) 0px, rgba(75,245,160,.035) 1px, transparent 2px, transparent 4px); mix-blend-mode:screen; pointer-events:none; z-index:5; }
+  #frame::before{ content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 20%, rgba(75,245,160,.05), transparent 60%); pointer-events:none; }
+
+  /* ---- old-terminal look: logo watermark + vignette + flicker + curvature ---- */
+  #frame{ animation:crtFlicker 6.5s infinite; }
+  #logo-bg{
+    position:absolute; inset:0; pointer-events:none; z-index:-1;
+    background-image:url('data:image/webp;base64,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');
+    background-repeat:no-repeat; background-position:center 46%; background-size:340px 340px;
+    opacity:.07; filter:grayscale(1) brightness(1.6) sepia(1) hue-rotate(60deg) saturate(4);
+    mix-blend-mode:screen;
+  }
+  #crt-vignette{
+    position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.55) 100%);
+    box-shadow:inset 0 0 140px 40px rgba(0,0,0,.6);
+  }
+  #crt-noise{
+    position:absolute; inset:0; pointer-events:none; opacity:.04; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  @keyframes crtFlicker{
+    0%, 96%, 100%{ filter:none; }
+    97%{ filter:brightness(1.12) contrast(1.04); }
+    98%{ filter:brightness(.92); }
+    99%{ filter:brightness(1.06); }
+  }
+
+  .titlebar{ flex-shrink:0; display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--line); background:linear-gradient(to bottom, #081007, #050a07); font-size:11px; color:var(--text-dim); letter-spacing:.5px; }
+  .dot{ width:9px; height:9px; border-radius:50%; border:1px solid var(--line); }
+  .dot.r{ background:var(--red); opacity:.55; } .dot.a{ background:var(--amber); opacity:.55; } .dot.g{ background:var(--green); opacity:.55; }
+  .titlebar .path{ margin-left:8px; color:var(--text-dim); }
+  .titlebar .path b{ color:var(--green); font-weight:normal; }
+  .titlebar .stats{ margin-left:auto; display:flex; gap:16px; font-size:10.5px; color:var(--text-dim); }
+  .titlebar .stats span b{ color:var(--green); font-weight:normal; }
+  .sig{ display:inline-flex; gap:2px; align-items:flex-end; margin-left:4px; }
+  .sig i{ width:3px; background:var(--green-dim); display:inline-block; }
+  .sig i:nth-child(1){ height:4px; } .sig i:nth-child(2){ height:6px; } .sig i:nth-child(3){ height:8px; } .sig i:nth-child(4){ height:10px; background:var(--green); }
+
+  #stage{ position:relative; flex:1; min-height:0; }
+
+  #boot{ position:absolute; inset:0; padding:34px 40px; display:flex; flex-direction:column; justify-content:flex-end; font-size:13.5px; line-height:1.85; overflow-y:auto; }
+  #boot-log{ max-width:640px; width:100%; }
+  #boot .ln{ white-space:pre-wrap; color:var(--text-dim); }
+  #boot .ln .ok{ color:var(--green); } #boot .ln .warn{ color:var(--amber); } #boot .ln .bad{ color:var(--red); }
+  .typecursor{ display:inline-block; width:7px; height:14px; background:var(--green); margin-left:2px; vertical-align:-2px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  #enter-wrap{ margin-top:28px; opacity:0; transition:opacity .4s ease; }
+  #enter-wrap.show{ opacity:1; }
+  #enter-btn{ font-family:var(--font); background:transparent; color:var(--green); border:1px solid var(--green-dim); padding:13px 30px; font-size:13px; letter-spacing:3px; cursor:pointer; transition:background .15s ease, color .15s ease, box-shadow .15s ease; }
+  #enter-btn:hover{ background:var(--green); color:#02150c; box-shadow:0 0 24px rgba(75,245,160,.35); }
+  #enter-btn:focus-visible{ outline:2px solid var(--amber); outline-offset:4px; }
+  #enter-hint{ margin-top:10px; font-size:10.5px; color:var(--text-dim); letter-spacing:.5px; }
+
+  #auth-wrap{ max-width:440px; width:100%; margin-top:22px; opacity:0; transition:opacity .35s ease; }
+  #auth-wrap.show{ opacity:1; }
+  .auth-box{ border:1px solid var(--line); background:var(--panel); padding:22px 24px; }
+  .auth-tabs{ display:flex; gap:0; margin-bottom:18px; border-bottom:1px solid var(--line-soft); }
+  .auth-tab{ font-family:var(--font); background:transparent; border:none; color:var(--text-dim); font-size:11.5px; letter-spacing:1px; padding:8px 4px; margin-right:22px; cursor:pointer; border-bottom:2px solid transparent; transition:color .15s ease, border-color .15s ease; }
+  .auth-tab.active{ color:var(--green); border-color:var(--green); }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:10.5px; color:var(--text-dim); letter-spacing:1px; margin-bottom:6px; }
+  .field .input-line{ display:flex; align-items:center; border:1px solid var(--line); background:var(--void); padding:9px 11px; }
+  .field .input-line span.gt{ color:var(--green-dim); margin-right:8px; }
+  .field input{ flex:1; background:transparent; border:none; color:var(--text); font-family:var(--font); font-size:13px; letter-spacing:.3px; }
+  .field input:focus{ outline:none; }
+  .field input::placeholder{ color:var(--text-dim); opacity:.6; }
+  .auth-msg{ font-size:11.5px; min-height:16px; margin:-2px 0 12px; }
+  .auth-msg.err{ color:var(--red); } .auth-msg.ok{ color:var(--green); }
+  .auth-submit{ width:100%; font-family:var(--font); background:transparent; color:var(--green); border:1px solid var(--green-dim); padding:11px; font-size:12px; letter-spacing:2px; cursor:pointer; transition:background .15s ease, color .15s ease; }
+  .auth-submit:hover{ background:var(--green); color:#02150c; }
+  .auth-submit:disabled{ opacity:.5; cursor:wait; }
+  .auth-note{ margin-top:14px; font-size:10px; color:var(--text-dim); line-height:1.6; border-top:1px dashed var(--line-soft); padding-top:12px; }
+
+  #app{ position:absolute; inset:0; display:none; flex-direction:column; padding:26px 34px 22px; opacity:0; }
+  #app.show{ display:flex; animation:fadeIn .35s ease forwards; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+
+  .app-head{ flex-shrink:0; margin-bottom:6px; }
+  .app-head .logo{ font-size:11px; color:var(--green-dim); line-height:1.15; white-space:pre; margin-bottom:14px; }
+  #crumbs{ font-size:12.5px; color:var(--text-dim); margin-bottom:18px; display:flex; align-items:center; flex-wrap:wrap; gap:2px; padding-bottom:14px; border-bottom:1px solid var(--line-soft); }
+  #crumbs .prompt{ color:var(--green-dim); margin-right:8px; }
+  #crumbs .seg{ cursor:pointer; }
+  #crumbs .seg:hover{ color:var(--green); text-decoration:underline; }
+  #crumbs .sep{ margin:0 4px; opacity:.4; }
+  #crumbs .cur{ color:var(--text); }
+  #crumbs .blink{ display:inline-block; width:7px; height:12px; background:var(--green); margin-left:6px; animation:blink 1s steps(1) infinite; }
+  #crumbs .logout{ margin-left:auto; cursor:pointer; color:var(--text-dim); font-size:11px; }
+  #crumbs .logout:hover{ color:var(--red); }
+
+  #view{ flex:1; overflow-y:auto; padding-right:6px; margin-right:-6px; }
+  #view::-webkit-scrollbar{ width:5px; } #view::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; }
+
+  .cmd-echo{ font-size:12px; color:var(--text-dim); margin-bottom:16px; }
+  .cmd-echo b{ color:var(--green); font-weight:normal; }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:14px; }
+  .card{ position:relative; border:1px solid var(--line); background:var(--panel); padding:20px 20px 18px; cursor:pointer; overflow:hidden; transition:border-color .18s ease, transform .12s ease, box-shadow .18s ease; }
+  .card::before{ content:""; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, var(--green), transparent); opacity:0; transition:opacity .18s ease; }
+  .card:hover{ border-color:var(--green-dim); box-shadow:0 0 26px -6px rgba(75,245,160,.25); transform:translateY(-2px); }
+  .card:hover::before{ opacity:1; }
+  .card:active{ transform:translateY(0) scale(.99); }
+  .card .glyph{ font-size:20px; color:var(--green); margin-bottom:10px; display:block; }
+  .card h3{ margin:0 0 7px; font-size:14.5px; color:var(--green); font-weight:normal; letter-spacing:.3px; }
+  .card h3::before{ content:"[ "; color:var(--green-dim); } .card h3::after{ content:" ]"; color:var(--green-dim); }
+  .card p{ margin:0; font-size:11.5px; color:var(--text-dim); line-height:1.55; }
+  .card .tag{ display:inline-block; font-size:9.5px; margin-top:12px; padding:3px 7px; border:1px solid var(--green-dim); color:var(--green); letter-spacing:.5px; }
+  .card.locked{ cursor:not-allowed; opacity:.4; }
+  .card.locked:hover{ border-color:var(--line); box-shadow:none; transform:none; }
+  .card.locked:hover::before{ opacity:0; }
+  .card.locked h3{ color:var(--text-dim); }
+  .card.locked h3::before, .card.locked h3::after{ color:var(--line); }
+  .card.locked .glyph{ color:var(--text-dim); }
+  .card.locked .tag{ border-color:var(--line); color:var(--text-dim); }
+
+  .recipe-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:22px; flex-wrap:wrap; gap:16px; }
+  .recipe-head h2{ margin:0; font-size:19px; color:var(--green); font-weight:normal; letter-spacing:.5px; }
+  .recipe-head .sub{ font-size:11.5px; color:var(--text-dim); margin-top:5px; }
+
+  .qty-box{ display:flex; align-items:center; gap:12px; border:1px solid var(--line); padding:9px 14px; background:var(--panel); }
+  .qty-box label{ font-size:10.5px; color:var(--text-dim); letter-spacing:.5px; }
+  .qty-box button{ font-family:var(--font); background:transparent; border:1px solid var(--green-dim); color:var(--green); width:28px; height:28px; cursor:pointer; font-size:15px; transition:background .12s ease, color .12s ease; }
+  .qty-box button:hover{ background:var(--green); color:#02150c; }
+  .qty-box input{ width:48px; text-align:center; background:transparent; border:none; color:var(--text); font-family:var(--font); font-size:15px; }
+  .qty-box input:focus{ outline:none; }
+
+  .steps-rail{ position:relative; margin-bottom:6px; }
+  .step{ position:relative; border:1px solid var(--line); background:var(--panel); padding:17px 19px; margin-bottom:12px; }
+  .step::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:2px; background:var(--green-deep); }
+  .step .step-label{ font-size:10.5px; color:var(--amber); letter-spacing:1.4px; margin-bottom:11px; }
+  .mat-list{ list-style:none; margin:0; padding:0; }
+  .mat-list li{ display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:7px 0; border-bottom:1px dashed var(--line-soft); }
+  .mat-list li:last-child{ border-bottom:none; }
+  .mat-list .amt{ color:var(--green); font-variant-numeric:tabular-nums; }
+  .step .yields{ margin-top:13px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:11.5px; color:var(--text-dim); display:flex; justify-content:space-between; align-items:center; }
+  .step .yields b{ color:var(--text); font-weight:normal; }
+
+  .totals{ margin-top:18px; border:1px solid var(--green-deep); background:var(--panel-2); padding:17px 19px; }
+  .totals .t-label{ font-size:10.5px; color:var(--green); letter-spacing:1.4px; margin-bottom:11px; }
+  .totals ul{ list-style:none; margin:0; padding:0; columns:2; column-gap:26px; }
+  .totals li{ display:flex; justify-content:space-between; font-size:12.5px; padding:5px 0; break-inside:avoid; }
+  .totals li .amt{ color:var(--amber); }
+
+  .back-link{ display:inline-flex; align-items:center; gap:6px; margin-top:16px; font-size:11.5px; color:var(--text-dim); cursor:pointer; transition:color .15s ease; }
+  .back-link:hover{ color:var(--green); }
+
+  .fade-in{ animation:panelIn .22s ease; }
+  @keyframes panelIn{ from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ---- chat ---- */
+  .chat-wrap{ display:flex; flex-direction:column; height:100%; max-height:520px; }
+  .chat-log{ flex:1; overflow-y:auto; border:1px solid var(--line); background:var(--panel); padding:14px 16px; margin-bottom:12px; min-height:260px; }
+  .chat-log::-webkit-scrollbar{ width:5px; } .chat-log::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; }
+  .chat-empty{ color:var(--text-dim); font-size:12px; }
+  .msg{ margin-bottom:12px; font-size:13px; line-height:1.5; }
+  .msg .who{ color:var(--green); }
+  .msg .who.me{ color:var(--amber); }
+  .msg .when{ color:var(--text-dim); font-size:10px; margin-left:6px; }
+  .msg .body{ color:var(--text); white-space:pre-wrap; word-break:break-word; }
+  .chat-input-row{ display:flex; gap:10px; }
+  .chat-input-row input{
+    flex:1; background:var(--void); border:1px solid var(--line); color:var(--text);
+    font-family:var(--font); font-size:13px; padding:11px 13px;
+  }
+  .chat-input-row input:focus{ outline:none; border-color:var(--green-dim); }
+  .chat-input-row button{
+    font-family:var(--font); background:transparent; border:1px solid var(--green-dim); color:var(--green);
+    padding:0 20px; cursor:pointer; letter-spacing:1px; font-size:12px; transition:background .15s ease, color .15s ease;
+  }
+  .chat-input-row button:hover{ background:var(--green); color:#02150c; }
+  .chat-status{ font-size:10px; color:var(--text-dim); margin-top:8px; }
+
+  /* ---- rank badge ---- */
+  .rank-badge{ display:inline-flex; align-items:center; gap:5px; font-size:9.5px; letter-spacing:1px; padding:3px 8px; border:1px solid var(--green-dim); color:var(--green); margin-left:8px; text-transform:uppercase; white-space:nowrap; }
+  .rank-badge.lider{ border-color:var(--amber); color:var(--amber); box-shadow:0 0 10px -3px rgba(240,168,63,.5); }
+  .rank-badge.colider{ border-color:var(--green); color:var(--green); box-shadow:0 0 10px -3px rgba(75,245,160,.4); }
+  .rank-badge.membru{ border-color:var(--line); color:var(--text-dim); }
+  .rank-badge.coordonator{ border-color:#7fd1ff; color:#7fd1ff; box-shadow:0 0 10px -3px rgba(127,209,255,.45); }
+  .rank-badge .dotmini{ width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+  /* ---- stoc / rulota / activitate ---- */
+  .stock-row{ display:flex; align-items:center; gap:14px; border:1px solid var(--line); background:var(--panel); padding:13px 16px; margin-bottom:10px; flex-wrap:wrap; }
+  .stock-row .sr-name{ flex:1; min-width:140px; font-size:13px; color:var(--text); }
+  .stock-row .sr-current{ font-size:11px; color:var(--text-dim); min-width:110px; }
+  .stock-row .sr-current b{ color:var(--green); font-weight:normal; }
+  .stock-row input[type="number"]{ width:90px; font-family:var(--font); background:var(--void); color:var(--text); border:1px solid var(--line); padding:7px 9px; font-size:12.5px; }
+  .stock-row input[type="number"]:focus{ outline:none; border-color:var(--green-dim); }
+  .stock-row .mr-btn{ font-family:var(--font); background:transparent; border:1px solid var(--green-dim); color:var(--green); padding:7px 13px; font-size:10.5px; letter-spacing:1px; cursor:pointer; }
+  .stock-row .mr-btn:hover{ background:var(--green); color:#02150c; }
+
+  .act-card{ border:1px solid var(--line); background:var(--panel); padding:17px 19px; margin-bottom:14px; }
+  .act-card .act-title{ font-size:14.5px; color:var(--green); margin-bottom:6px; }
+  .act-card .act-meta{ font-size:10.5px; color:var(--text-dim); margin-bottom:10px; }
+  .act-card .act-desc{ font-size:12.5px; color:var(--text); line-height:1.55; margin-bottom:14px; white-space:pre-wrap; }
+  .act-card .act-actions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .act-card .act-actions button{ font-family:var(--font); border:1px solid var(--green-dim); background:transparent; color:var(--green); padding:8px 16px; font-size:11px; letter-spacing:1px; cursor:pointer; }
+  .act-card .act-actions button:hover{ background:var(--green); color:#02150c; }
+  .act-card .act-actions button.out{ border-color:var(--red); color:var(--red); }
+  .act-card .act-actions button.out:hover{ background:var(--red); color:#1a0704; }
+  .act-card .act-actions button.active-state{ background:var(--green); color:#02150c; }
+  .act-card .act-actions button.out.active-state{ background:var(--red); color:#1a0704; }
+  .act-card .act-count{ font-size:10.5px; color:var(--text-dim); margin-left:auto; }
+  .act-card .act-list{ margin-top:12px; padding-top:12px; border-top:1px dashed var(--line-soft); font-size:11px; color:var(--text-dim); }
+
+  /* ---- toast ---- */
+  #toast-wrap{ position:absolute; bottom:18px; right:18px; display:flex; flex-direction:column; gap:8px; z-index:50; pointer-events:none; }
+  .toast{ font-size:11.5px; padding:10px 15px; border:1px solid var(--green-dim); background:var(--panel); color:var(--text); box-shadow:0 8px 24px -8px rgba(0,0,0,.7); animation:toastIn .25s ease, toastOut .3s ease 2.7s forwards; }
+  .toast.err{ border-color:var(--red); color:var(--red); }
+  .toast.ok{ border-color:var(--green); }
+  @keyframes toastIn{ from{opacity:0; transform:translateX(16px);} to{opacity:1; transform:translateX(0);} }
+  @keyframes toastOut{ to{opacity:0; transform:translateX(16px);} }
+
+  /* ---- orders ---- */
+  .sub-tabs{ display:flex; gap:0; margin-bottom:18px; border-bottom:1px solid var(--line-soft); flex-wrap:wrap; }
+  .sub-tab{ font-family:var(--font); background:transparent; border:none; color:var(--text-dim); font-size:11px; letter-spacing:1px; padding:9px 6px; margin-right:24px; cursor:pointer; border-bottom:2px solid transparent; transition:color .15s ease, border-color .15s ease; text-transform:uppercase; }
+  .sub-tab.active{ color:var(--green); border-color:var(--green); }
+  .sub-tab .cnt{ display:inline-block; margin-left:6px; font-size:9.5px; color:var(--void); background:var(--amber); border-radius:8px; padding:1px 6px; }
+
+  .order-form{ border:1px solid var(--line); background:var(--panel); padding:20px; margin-bottom:22px; }
+  .order-form .of-label{ font-size:10.5px; color:var(--text-dim); letter-spacing:1.4px; margin-bottom:14px; }
+  .item-pick{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:12px; margin-bottom:16px; }
+  .item-opt{ border:1px solid var(--line); background:var(--void); padding:13px 15px; cursor:pointer; transition:border-color .15s ease, background .15s ease; }
+  .item-opt:hover{ border-color:var(--green-dim); }
+  .item-opt.sel{ border-color:var(--green); background:rgba(75,245,160,.06); }
+  .item-opt .io-name{ font-size:13px; color:var(--text); margin-bottom:5px; }
+  .item-opt .io-price{ font-size:12.5px; color:var(--amber); font-variant-numeric:tabular-nums; }
+  .note-line{ display:flex; align-items:center; border:1px solid var(--line); background:var(--void); padding:9px 11px; margin-bottom:16px; }
+  .note-line input{ flex:1; background:transparent; border:none; color:var(--text); font-family:var(--font); font-size:13px; }
+  .note-line input:focus{ outline:none; }
+  .note-line span.gt{ color:var(--green-dim); margin-right:8px; }
+
+  .order-card{ position:relative; border:1px solid var(--line); background:var(--panel); padding:16px 18px; margin-bottom:12px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .order-card .oc-main{ flex:1; min-width:180px; }
+  .order-card .oc-item{ font-size:13.5px; color:var(--text); }
+  .order-card .oc-meta{ font-size:10.5px; color:var(--text-dim); margin-top:4px; }
+  .order-card .oc-price{ font-size:13px; color:var(--amber); font-variant-numeric:tabular-nums; margin-right:10px; }
+  .order-card .oc-note{ font-size:11.5px; color:var(--text-dim); margin-top:6px; font-style:italic; }
+  .status-chip{ font-size:9.5px; letter-spacing:1px; padding:3px 9px; border:1px solid; text-transform:uppercase; }
+  .status-chip.pending{ color:var(--amber); border-color:var(--amber); }
+  .status-chip.approved{ color:var(--green); border-color:var(--green); }
+  .status-chip.rejected{ color:var(--red); border-color:var(--red); }
+  .oc-actions{ display:flex; gap:8px; }
+  .oc-actions button{ font-family:var(--font); background:transparent; border:1px solid var(--green-dim); color:var(--green); padding:7px 14px; font-size:11px; letter-spacing:1px; cursor:pointer; transition:background .15s ease, color .15s ease; }
+  .oc-actions button:hover{ background:var(--green); color:#02150c; }
+  .oc-actions button.reject{ border-color:var(--red); color:var(--red); }
+  .oc-actions button.reject:hover{ background:var(--red); color:#1a0704; }
+  .empty-note{ font-size:12px; color:var(--text-dim); padding:20px 0; }
+
+  .member-row{ display:flex; align-items:center; gap:14px; border:1px solid var(--line); background:var(--panel); padding:13px 16px; margin-bottom:10px; flex-wrap:wrap; }
+  .member-row .mr-email{ flex:1; min-width:160px; font-size:13px; color:var(--text); }
+  .member-row select{ font-family:var(--font); background:var(--void); color:var(--text); border:1px solid var(--line); padding:6px 9px; font-size:11.5px; letter-spacing:.5px; }
+  .member-row .mr-btn{ font-family:var(--font); background:transparent; border:1px solid var(--green-dim); color:var(--green); padding:6px 12px; font-size:10.5px; letter-spacing:1px; cursor:pointer; }
+  .member-row .mr-btn:hover{ background:var(--green); color:#02150c; }
+  .section-title{ font-size:11px; color:var(--green); letter-spacing:1.4px; margin:26px 0 14px; padding-top:16px; border-top:1px dashed var(--line-soft); }
+  .section-title:first-child{ margin-top:0; padding-top:0; border-top:none; }
+
+  @media (max-width:640px){
+    #crt{ padding:0; } #frame{ border-radius:0; max-width:none; }
+    #app{ padding:18px 16px 16px; } .titlebar .stats{ display:none; }
+    .app-head .logo{ font-size:9px; } #boot{ padding:24px 20px; }
+    .rank-badge{ margin-left:0; margin-top:4px; }
+  }
+</style>
 </head>
 <body>
 <div id="crt">
   <div id="frame">
-    <div id="watermark"></div>
-    <canvas id="matrix"></canvas>
+    <div id="logo-bg"></div>
 
     <div class="titlebar">
       <span class="dot r"></span><span class="dot a"></span><span class="dot g"></span>
       <span class="path">bzone_terminal — <b id="tb-state">secure_shell</b></span>
-      <span class="rank-pill" id="tb-rank"></span>
       <div class="stats">
+        <span id="btn-cloud-db" style="cursor:pointer;" title="Apasă pentru a conecta Baza de Date partajată (Firebase)">db <b id="stat-db">local</b></span>
         <span>link <b id="stat-link">stabil</b></span>
         <span>ping <b id="stat-ping">—</b> ms</span>
         <span>uptime <b id="stat-uptime">00:00</b></span>
@@ -37,8 +318,8 @@
 
             <form id="form-login">
               <div class="field">
-                <label>EMAIL</label>
-                <div class="input-line"><span class="gt">&gt;</span><input type="email" id="login-email" placeholder="operator@mail.com" autocomplete="off" required></div>
+                <label>EMAIL (@gta5.ro)</label>
+                <div class="input-line"><span class="gt">&gt;</span><input type="text" id="login-email" placeholder="nume@gta5.ro" autocomplete="off" required></div>
               </div>
               <div class="field">
                 <label>PAROLĂ</label>
@@ -50,12 +331,12 @@
 
             <form id="form-register" style="display:none;">
               <div class="field">
-                <label>EMAIL</label>
-                <div class="input-line"><span class="gt">&gt;</span><input type="email" id="reg-email" placeholder="operator@mail.com" autocomplete="off" required></div>
+                <label>EMAIL (@gta5.ro)</label>
+                <div class="input-line"><span class="gt">&gt;</span><input type="text" id="reg-email" placeholder="nume@gta5.ro" autocomplete="off" required></div>
               </div>
               <div class="field">
                 <label>PAROLĂ</label>
-                <div class="input-line"><span class="gt">&gt;</span><input type="password" id="reg-pass" placeholder="min. 6 caractere" autocomplete="off" required></div>
+                <div class="input-line"><span class="gt">&gt;</span><input type="password" id="reg-pass" placeholder="min. 4 caractere" autocomplete="off" required></div>
               </div>
               <div class="field">
                 <label>CONFIRMĂ PAROLA</label>
@@ -65,7 +346,7 @@
               <button type="submit" class="auth-submit" id="reg-submit">&gt; CREEAZĂ CONT</button>
             </form>
 
-            <div class="auth-note">primul cont creat vreodată devine automat <b style="color:var(--amber)">LIDER</b>. restul pornesc ca <b>MEMBRU</b>. conturile, gradele, comenzile, acțiunile, rulota și mesajele se salvează într-o bază de date reală pe server — rămân disponibile oricând, de pe orice dispozitiv, indiferent de Claude sau de browser.</div>
+            <div class="auth-note">notă: conturile, mesajele și comenzile se salvează persistent în browser (localStorage) sau în baza de date Cloud (Firebase) dacă este conectată din bara de sus (<b style="color:var(--amber);">db</b>). primul cont creat devine automat <b style="color:var(--amber);">LIDER</b>; acesta poate promova membri la <b style="color:var(--green);">COLIDER</b> din secțiunea Comenzi → Membri clan.</div>
           </div>
         </div>
 
@@ -86,12 +367,1475 @@
         <div id="crumbs"></div>
         <div id="view"></div>
       </div>
+      <div id="toast-wrap"></div>
     </div>
+    <div id="crt-vignette"></div>
+    <div id="crt-noise"></div>
 
   </div>
 </div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="/js/app.js"></script>
+<script>
+(function(){
+  // ================= titlebar live stats =================
+  var t0 = Date.now();
+  function pad(n){ return n<10 ? '0'+n : ''+n; }
+  setInterval(function(){
+    var s = Math.floor((Date.now()-t0)/1000);
+    document.getElementById('stat-uptime').textContent = pad(Math.floor(s/60))+':'+pad(s%60);
+  }, 1000);
+  function pingTick(){ document.getElementById('stat-ping').textContent = 18 + Math.floor(Math.random()*26); }
+  pingTick();
+  setInterval(pingTick, 2200);
+
+  // ================= storage helpers (Firebase cloud database with localStorage fallback) =================
+  var DB_WIPE_VER = 'wipe_2026_09_13_v7';
+  try {
+    if (window.localStorage && window.localStorage.getItem('bzone_wipe_ver') !== DB_WIPE_VER) {
+      ['bzone_accounts', 'bzone_chat', 'bzone_orders', 'bzone_stock', 'bzone_rulota', 'bzone_rulota_orders', 'bzone_activities', 'bzone_last_email', 'bzone_firebase_url'].forEach(function(k){
+        window.localStorage.removeItem(k);
+      });
+      window.localStorage.setItem('bzone_wipe_ver', DB_WIPE_VER);
+    }
+  } catch(e){}
+
+  var DEFAULT_FIREBASE_URL = 'https://moretti-32c73-default-rtdb.europe-west1.firebasedatabase.app';
+  var CLOUD_DB_KEY = 'bzone_firebase_url';
+  function getCloudDbUrl(){
+    try {
+      var saved = window.localStorage ? window.localStorage.getItem(CLOUD_DB_KEY) : null;
+      if(saved !== null && saved !== '') return saved;
+    } catch(e){}
+    return DEFAULT_FIREBASE_URL;
+  }
+  function setCloudDbUrl(url){
+    try {
+      if(window.localStorage) {
+        if(url) window.localStorage.setItem(CLOUD_DB_KEY, url);
+        else window.localStorage.removeItem(CLOUD_DB_KEY);
+      }
+    } catch(e){}
+    updateDbIndicator();
+  }
+
+  function updateDbIndicator(){
+    var el = document.getElementById('stat-db');
+    if(!el) return;
+    var url = getCloudDbUrl();
+    if(url){
+      el.textContent = 'online';
+      el.style.color = 'var(--green)';
+    } else {
+      el.textContent = 'local';
+      el.style.color = 'var(--amber)';
+    }
+  }
+
+  setTimeout(function(){
+    updateDbIndicator();
+    var btn = document.getElementById('btn-cloud-db');
+    if(btn){
+      btn.addEventListener('click', function(){
+        var cur = getCloudDbUrl();
+        var inp = prompt("URL Bază de Date Firebase Realtime:\n(Actual: " + cur + ")\n\nLasă gol pentru a reseta la stocarea locală:", cur);
+        if(inp !== null){
+          var clean = inp.trim().replace(/\/$/, '');
+          setCloudDbUrl(clean);
+          if(clean){
+            toast('Bază de date conectată: ' + clean, 'ok');
+          } else {
+            toast('Revenit la stocarea locală a browserului.', 'ok');
+          }
+          setTimeout(function(){ location.reload(); }, 600);
+        }
+      });
+    }
+  }, 500);
+
+  // Helper to encode/decode keys with characters forbidden by Firebase (. $ # [ ] /)
+  function sanitizeForFirebase(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(sanitizeForFirebase);
+    var clean = {};
+    for (var k in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, k)) {
+        var safeKey = k.replace(/\./g, '__dot__')
+                       .replace(/\$/g, '__dollar__')
+                       .replace(/#/g, '__hash__')
+                       .replace(/\[/g, '__lbr__')
+                       .replace(/\]/g, '__rbr__')
+                       .replace(/\//g, '__slash__');
+        clean[safeKey] = sanitizeForFirebase(obj[k]);
+      }
+    }
+    return clean;
+  }
+
+  function desanitizeFromFirebase(obj) {
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(desanitizeFromFirebase);
+    var restored = {};
+    for (var k in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, k)) {
+        var origKey = k.replace(/__dot__/g, '.')
+                       .replace(/__dollar__/g, '$')
+                       .replace(/__hash__/g, '#')
+                       .replace(/__lbr__/g, '[')
+                       .replace(/__rbr__/g, ']')
+                       .replace(/__slash__/g, '/');
+        restored[origKey] = desanitizeFromFirebase(obj[k]);
+      }
+    }
+    return restored;
+  }
+
+  function ensureArray(val) {
+    if (Array.isArray(val)) return val;
+    if (val && typeof val === 'object') {
+      return Object.keys(val).map(function(k){ return val[k]; });
+    }
+    return [];
+  }
+
+  var memStore = { bzone_accounts:{}, bzone_chat:[], bzone_orders:[] };
+
+  async function loadJSON(key, fallback){
+    var cloudUrl = getCloudDbUrl();
+    if(cloudUrl){
+      try{
+        var cleanUrl = cloudUrl + '/' + key + '.json';
+        var r = await fetch(cleanUrl);
+        if(r.ok){
+          var raw = await r.json();
+          if(raw !== null){
+            var data = desanitizeFromFirebase(raw);
+            try{ if(window.localStorage) window.localStorage.setItem(key, JSON.stringify(data)); }catch(e){}
+            return data;
+          } else {
+            try{ if(window.localStorage) window.localStorage.removeItem(key); }catch(e){}
+            memStore[key] = Array.isArray(fallback) ? [] : (fallback && typeof fallback === 'object' ? {} : fallback);
+            return fallback;
+          }
+        }
+      }catch(e){
+        console.warn('Cloud DB fetch failed, falling back to local:', e);
+      }
+    }
+    try{
+      if(typeof window.storage !== 'undefined'){
+        var r = await window.storage.get(key, true);
+        if(r && r.value) return JSON.parse(r.value);
+      }
+    }catch(e){}
+    try{
+      if(typeof window.localStorage !== 'undefined'){
+        var item = window.localStorage.getItem(key);
+        if(item !== null) return JSON.parse(item);
+      }
+    }catch(e){}
+    return JSON.parse(JSON.stringify(memStore[key] != null ? memStore[key] : fallback));
+  }
+
+  async function saveJSON(key, val){
+    var cloudUrl = getCloudDbUrl();
+    if(cloudUrl){
+      try{
+        var cleanUrl = cloudUrl + '/' + key + '.json';
+        var payload = sanitizeForFirebase(val);
+        await fetch(cleanUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }catch(e){
+        console.warn('Cloud DB save failed, saving locally:', e);
+      }
+    }
+    try{
+      if(typeof window.storage !== 'undefined'){
+        await window.storage.set(key, JSON.stringify(val), true);
+      }
+    }catch(e){}
+    try{
+      if(typeof window.localStorage !== 'undefined'){
+        window.localStorage.setItem(key, JSON.stringify(val));
+      }
+    }catch(e){}
+    memStore[key] = val;
+    return true;
+  }
+
+  function ensureGtaEmail(str){
+    if(!str) return '';
+    str = String(str).trim().toLowerCase();
+    if(str.endsWith('@gta5.ro')) return str;
+    var user = str.indexOf('@') !== -1 ? str.split('@')[0] : str;
+    user = user.replace(/[^a-z0-9._-]/g, '');
+    if(!user) user = 'operator';
+    return user + '@gta5.ro';
+  }
+
+  async function loadAccounts(){
+    var raw = await loadJSON('bzone_accounts', {});
+    if(!raw || typeof raw !== 'object') raw = {};
+    var cleaned = {};
+    var changed = false;
+    for(var k in raw){
+      if(Object.prototype.hasOwnProperty.call(raw, k)){
+        var newKey = ensureGtaEmail(k);
+        cleaned[newKey] = raw[k];
+        if(newKey !== k) changed = true;
+      }
+    }
+    if(changed){
+      saveAccounts(cleaned);
+    }
+    return cleaned;
+  }
+  function saveAccounts(obj){ return saveJSON('bzone_accounts', obj); }
+  async function loadMessages(){ return ensureArray(await loadJSON('bzone_chat', [])); }
+  function saveMessages(arr){ return saveJSON('bzone_chat', arr); }
+  async function loadOrders(){ return ensureArray(await loadJSON('bzone_orders', [])); }
+  function saveOrders(arr){ return saveJSON('bzone_orders', arr); }
+  async function loadStock(){
+    var s = await loadJSON('bzone_stock', {});
+    if(!s || typeof s !== 'object') s = {};
+    ORDER_ITEMS.forEach(function(it){
+      if(s[it.key] === undefined) s[it.key] = 10;
+    });
+    return s;
+  }
+  function saveStock(obj){ return saveJSON('bzone_stock', obj); }
+  async function loadRulota(){
+    var s = await loadJSON('bzone_rulota', {});
+    if(!s || typeof s !== 'object') s = {};
+    RULOTA_ITEMS.forEach(function(it){
+      if(s[it.key] === undefined) s[it.key] = 10;
+    });
+    return s;
+  }
+  function saveRulota(obj){ return saveJSON('bzone_rulota', obj); }
+  async function loadActivities(){ return ensureArray(await loadJSON('bzone_activities', [])); }
+  function saveActivities(arr){ return saveJSON('bzone_activities', arr); }
+
+  var currentUser = null;
+  var currentRole = 'membru';
+
+  function fmtMoney(n){ return '$' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+
+  function toast(text, kind){
+    var wrap = document.getElementById('toast-wrap');
+    if(!wrap) return;
+    var t = document.createElement('div');
+    t.className = 'toast' + (kind ? ' '+kind : '');
+    t.textContent = text;
+    wrap.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 3000);
+  }
+
+  // ================= boot sequence (typed) =================
+  var bootLines = [
+    {text:'initializing b_zone uplink...', cls:''},
+    {text:'mounting encrypted volume [OK]', cls:'ok'},
+    {text:'loading node registry... 214 entries', cls:''},
+    {text:'handshake cu relay 4... [OK]', cls:'ok'},
+    {text:'cloud database uplink [OK]', cls:'ok'},
+    {text:'verificare integritate firmware... [OK]', cls:'ok'},
+    {text:'avertisment: accesul neautorizat este monitorizat', cls:'warn'},
+    {text:'aștept credențiale operator...', cls:''}
+  ];
+
+  var log = document.getElementById('boot-log');
+  var lineIdx = 0;
+
+  function typeLine(text, cls, cb){
+    var div = document.createElement('div');
+    div.className = 'ln';
+    log.appendChild(div);
+    var span = document.createElement('span');
+    if(cls) span.className = cls;
+    div.appendChild(span);
+    var cursor = document.createElement('span');
+    cursor.className = 'typecursor';
+    div.appendChild(cursor);
+
+    var i = 0;
+    var speed = 14 + Math.random()*10;
+    (function step(){
+      if(i <= text.length){
+        span.textContent = text.slice(0, i);
+        i++;
+        setTimeout(step, speed);
+      } else {
+        cursor.remove();
+        if(cb) cb();
+      }
+    })();
+  }
+
+  function runBoot(){
+    if(lineIdx >= bootLines.length){
+      document.getElementById('auth-wrap').classList.add('show');
+      var emailInput = document.getElementById('login-email');
+      var lastEmail = '';
+      try { lastEmail = (window.localStorage ? window.localStorage.getItem('bzone_last_email') : '') || ''; } catch(e){}
+      if(lastEmail){
+        lastEmail = ensureGtaEmail(lastEmail);
+        emailInput.value = lastEmail;
+        document.getElementById('login-pass').focus();
+      } else {
+        emailInput.focus();
+      }
+      return;
+    }
+    var l = bootLines[lineIdx];
+    lineIdx++;
+    typeLine(l.text, l.cls, function(){
+      setTimeout(runBoot, l.cls === 'warn' ? 260 : 160);
+    });
+  }
+  setTimeout(runBoot, 300);
+
+  // ================= auth tabs =================
+  var tabLogin = document.getElementById('tab-login');
+  var tabRegister = document.getElementById('tab-register');
+  var formLogin = document.getElementById('form-login');
+  var formRegister = document.getElementById('form-register');
+
+  tabLogin.addEventListener('click', function(){
+    tabLogin.classList.add('active'); tabRegister.classList.remove('active');
+    formLogin.style.display = 'block'; formRegister.style.display = 'none';
+  });
+  tabRegister.addEventListener('click', function(){
+    tabRegister.classList.add('active'); tabLogin.classList.remove('active');
+    formRegister.style.display = 'block'; formLogin.style.display = 'none';
+  });
+
+  function setMsg(id, text, ok){
+    var el = document.getElementById(id);
+    el.textContent = text;
+    el.className = 'auth-msg ' + (ok ? 'ok' : 'err');
+  }
+
+  function accPass(acc){ return (acc && typeof acc === 'object') ? acc.pass : acc; }
+  function accRole(acc){ return (acc && typeof acc === 'object' && acc.role) ? acc.role : 'membru'; }
+
+  function afterAuth(email, role){
+    email = ensureGtaEmail(email);
+    currentUser = email;
+    currentRole = role || 'membru';
+    try { if(window.localStorage) window.localStorage.setItem('bzone_last_email', email); } catch(e){}
+    var ew = document.getElementById('auth-wrap');
+    ew.style.opacity = 0;
+    setTimeout(function(){
+      ew.remove();
+      var postLines = [
+        {text:'autentificare reușită pentru ' + email, cls:'ok'},
+        {text:'sesiune criptată stabilită. bine ai revenit.', cls:'ok'}
+      ];
+      var idx = 0;
+      (function step(){
+        if(idx >= postLines.length){
+          document.getElementById('enter-wrap').classList.add('show');
+          document.getElementById('tb-state').textContent = email;
+          return;
+        }
+        var l = postLines[idx]; idx++;
+        typeLine(l.text, l.cls, function(){ setTimeout(step, 220); });
+      })();
+    }, 260);
+  }
+
+  ['login-email', 'reg-email'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){
+      el.addEventListener('blur', function(){
+        if(this.value.trim()){
+          this.value = ensureGtaEmail(this.value);
+        }
+      });
+    }
+  });
+
+  formRegister.addEventListener('submit', async function(e){
+    e.preventDefault();
+    var email = ensureGtaEmail(document.getElementById('reg-email').value);
+    document.getElementById('reg-email').value = email;
+    var pass = document.getElementById('reg-pass').value;
+    var pass2 = document.getElementById('reg-pass2').value;
+    var btn = document.getElementById('reg-submit');
+
+    var uName = email.replace('@gta5.ro', '');
+    if(!email.endsWith('@gta5.ro') || uName.length < 2){
+      setMsg('reg-msg', 'format invalid. email-ul trebuie să fie de forma nume@gta5.ro', false);
+      return;
+    }
+    if(pass.length < 4){ setMsg('reg-msg', 'parola trebuie să aibă minim 4 caractere.', false); return; }
+    if(pass !== pass2){ setMsg('reg-msg', 'parolele nu coincid.', false); return; }
+
+    btn.disabled = true; setMsg('reg-msg', 'se verifică...', true);
+    var accounts = await loadAccounts();
+    if(accounts[email]){
+      btn.disabled = false;
+      setMsg('reg-msg', 'există deja un cont cu acest email.', false); return;
+    }
+    var anyLider = Object.keys(accounts).some(function(k){ return accRole(accounts[k]) === 'lider'; });
+    var role = anyLider ? 'membru' : 'lider';
+    accounts[email] = { pass: pass, role: role };
+    await saveAccounts(accounts);
+    setMsg('reg-msg', role === 'lider' ? 'cont creat ca LIDER (primul cont). autentificare...' : 'cont creat și salvat. autentificare...', true);
+    setTimeout(function(){ afterAuth(email, role); }, 500);
+  });
+
+  formLogin.addEventListener('submit', async function(e){
+    e.preventDefault();
+    var email = ensureGtaEmail(document.getElementById('login-email').value);
+    document.getElementById('login-email').value = email;
+    var pass = document.getElementById('login-pass').value;
+    var btn = document.getElementById('login-submit');
+
+    btn.disabled = true; setMsg('login-msg', 'se verifică...', true);
+    var accounts = await loadAccounts();
+    if(!accounts[email]){
+      btn.disabled = false;
+      setMsg('login-msg', 'cont inexistent. creează unul mai întâi.', false); return;
+    }
+    if(accPass(accounts[email]) !== pass){
+      btn.disabled = false;
+      setMsg('login-msg', 'parolă incorectă.', false); return;
+    }
+    var anyLiderNow = Object.keys(accounts).some(function(k){ return accRole(accounts[k]) === 'lider'; });
+    if(!anyLiderNow){
+      accounts[email] = { pass: accPass(accounts[email]), role: 'lider' };
+      await saveAccounts(accounts);
+    }
+    setMsg('login-msg', 'acces autorizat...', true);
+    setTimeout(function(){ afterAuth(email, accRole(accounts[email])); }, 500);
+  });
+
+  document.getElementById('enter-btn').addEventListener('click', function(){
+    document.getElementById('stage').removeChild(document.getElementById('boot'));
+    var app = document.getElementById('app');
+    app.classList.add('show');
+    render();
+  });
+
+  // ================= crafting data =================
+  var DATA = {
+    arme: {
+      label:'ARME', glyph:'▣',
+      items:{
+        tec9:{
+          name:'TEC-9', glyph:'▣', desc:'SMG compactă, cadență mare, rază mică.',
+          steps:[
+            {label:'PASUL 1 — COMPONENTE', mats:[{name:'Oțel',amt:1},{name:'Plastic',amt:1},{name:'Arc',amt:1},{name:'Șrapnel metalic',amt:2}], yields:{name:'Piese',amt:2}},
+            {label:'PASUL 2 — ASAMBLARE', mats:[{name:'Piese (pt. 2 țevi SMG)',amt:2},{name:'Corp pistol',amt:1},{name:'Kit bonus',amt:1}], yields:{name:'TEC-9',amt:1}}
+          ]
+        },
+        heavy:{
+          name:'HEAVY REVOLVER', glyph:'◆', desc:'Revolver greu, daună mare, cadență lentă.',
+          steps:[
+            {label:'PASUL 1 — COMPONENTE', mats:[{name:'Oțel',amt:1},{name:'Plastic',amt:1},{name:'Arc',amt:1},{name:'Șrapnel metalic',amt:2}], yields:{name:'Piese armă',amt:2}},
+            {label:'PASUL 2 — ASAMBLARE', mats:[{name:'Țeavă pistol',amt:1},{name:'Corp',amt:1},{name:'Piese armă',amt:3}], yields:{name:'Heavy Revolver',amt:1}}
+          ]
+        }
+      },
+      soon:['More coming soon']
+    },
+    gloante:{
+      label:'GLOANTE', glyph:'●',
+      items:{
+        mm9pbm:{
+          name:'9MM / PBM', glyph:'●', desc:'Muniție standard pentru arme de calibru mic.',
+          steps:[
+            {label:'PASUL 1 — CASINGURI', mats:[{name:'Cupru',amt:1}], yields:{name:'Casinguri',amt:30}},
+            {label:'PASUL 2 — PRAF DE PUȘCĂ', mats:[{name:'Sulf',amt:1},{name:'Cărbuni',amt:1}], yields:{name:'Praf de pușcă',amt:1}},
+            {label:'PASUL 3 — ÎNCĂRCARE', mats:[{name:'Casinguri',amt:30},{name:'Praf de pușcă',amt:1},{name:'Plumb',amt:1}], yields:{name:'9mm / PBM',amt:30}}
+          ]
+        }
+      },
+      soon:['More coming soon']
+    }
+  };
+
+  var ORDER_ITEMS = [
+    {key:'armura', name:'Armură', price:5000, glyph:'▣'},
+    {key:'kit_medical', name:'Kit medical', price:15000, glyph:'✚'},
+    {key:'blueprint_db', name:'Blueprint DB', price:75000, glyph:'◈'},
+    {key:'shotgun', name:'Shotgun', price:60000, glyph:'▬'}
+  ];
+
+  var RULOTA_ITEMS = [
+    {key:'tigari', name:'Țigări', glyph:'▬'},
+    {key:'jointuri', name:'Joint-uri', glyph:'❃'},
+    {key:'cocaina', name:'Cocaină', glyph:'✦'},
+    {key:'red_blaze', name:'Red Blaze', glyph:'●'},
+    {key:'green_haze', name:'Green Haze', glyph:'●'},
+    {key:'blue_curent', name:'Blue Curent', glyph:'●'}
+  ];
+
+  function isMgmt(role){ return role === 'lider' || role === 'colider' || role === 'coordonator'; }
+  function canEditRulota(role){ return role === 'lider' || role === 'coordonator'; }
+  function canRunActivities(role){ return role === 'lider' || role === 'colider' || role === 'coordonator'; }
+
+  var view = document.getElementById('view');
+  var crumbs = document.getElementById('crumbs');
+  var state = { section:null, cat:null, item:null, qty:1, ordersTab:'noua', actEditing:false };
+  var chatPoller = null;
+  var ordersPoller = null;
+  var rulotaPoller = null;
+  var actPoller = null;
+  function stopOrdersPoller(){ if(ordersPoller){ clearInterval(ordersPoller); ordersPoller = null; } }
+  function stopRulotaPoller(){ if(rulotaPoller){ clearInterval(rulotaPoller); rulotaPoller = null; } }
+  function stopActPoller(){ if(actPoller){ clearInterval(actPoller); actPoller = null; } }
+
+  function stopChatPoller(){ if(chatPoller){ clearInterval(chatPoller); chatPoller = null; } }
+  function stopAllPollers(){ stopChatPoller(); stopOrdersPoller(); stopRulotaPoller(); stopActPoller(); }
+
+  function setCrumbs(){
+    var parts = [{label:'root', go:function(){ stopAllPollers(); state.section=null; state.cat=null; state.item=null; render(); }}];
+    if(state.section === 'chat'){
+      parts.push({label:'deep_web', go:null});
+    } else if(state.section === 'orders'){
+      parts.push({label:'comenzi', go:null});
+    } else if(state.section === 'rulota'){
+      parts.push({label:'rulota', go:null});
+    } else if(state.section === 'activitati'){
+      parts.push({label:'activitati', go:null});
+    } else if(state.cat){
+      parts.push({label:DATA[state.cat].label.toLowerCase(), go:function(){ stopChatPoller(); state.item=null; render(); }});
+      if(state.item) parts.push({label:DATA[state.cat].items[state.item].name.toLowerCase().replace(/\s+/g,'_'), go:null});
+    }
+    crumbs.innerHTML = '';
+
+    var prompt = document.createElement('span');
+    prompt.className = 'prompt';
+    prompt.textContent = (currentUser ? currentUser.replace('@gta5.ro', '') : 'guest_operator') + '@bzone:~$ cd';
+    crumbs.appendChild(prompt);
+
+    if(currentUser){
+      var badge = document.createElement('span');
+      badge.className = 'rank-badge ' + currentRole;
+      badge.innerHTML = '<span class="dotmini"></span>' + currentRole;
+      crumbs.appendChild(badge);
+    }
+
+    parts.forEach(function(p){
+      var sep = document.createElement('span'); sep.className='sep'; sep.textContent='/';
+      crumbs.appendChild(sep);
+      var s = document.createElement('span');
+      s.textContent = p.label;
+      if(p.go){ s.className='seg'; s.addEventListener('click', p.go); }
+      else { s.className='cur'; }
+      crumbs.appendChild(s);
+    });
+
+    var cursor = document.createElement('span');
+    cursor.className = 'blink';
+    crumbs.appendChild(cursor);
+
+    var logout = document.createElement('span');
+    logout.className = 'logout';
+    logout.textContent = '⏻ deconectare';
+    logout.addEventListener('click', function(){ location.reload(); });
+    crumbs.appendChild(logout);
+  }
+
+  function render(){
+    setCrumbs();
+    view.innerHTML = '';
+    if(state.section === 'chat'){ renderChat(); }
+    else if(state.section === 'orders'){ renderOrders(); }
+    else if(state.section === 'rulota'){ renderRulota(); }
+    else if(state.section === 'activitati'){ renderActivities(); }
+    else if(!state.cat){ renderMenu(); }
+    else if(!state.item){ renderCategory(state.cat); }
+    else { renderRecipe(state.cat, state.item); }
+  }
+
+  function echo(text){
+    var e = document.createElement('div');
+    e.className = 'cmd-echo';
+    e.innerHTML = text;
+    view.appendChild(e);
+  }
+
+  function card(title, desc, locked, tagText, glyph){
+    var c = document.createElement('div');
+    c.className = 'card' + (locked ? ' locked':'');
+    var g = document.createElement('span'); g.className='glyph'; g.textContent = glyph || '▣';
+    var h = document.createElement('h3'); h.textContent = title;
+    var p = document.createElement('p'); p.textContent = desc;
+    c.appendChild(g); c.appendChild(h); c.appendChild(p);
+    if(tagText){
+      var t = document.createElement('span'); t.className = 'tag'; t.textContent = tagText;
+      c.appendChild(t);
+    }
+    return c;
+  }
+
+  function renderMenu(){
+    echo('&gt; <b>ls</b> /root');
+    var grid = document.createElement('div');
+    grid.className = 'grid fade-in';
+
+    var arme = card('ARME', 'Arme de foc disponibile pentru craft.', false, 'disponibil', DATA.arme.glyph);
+    arme.addEventListener('click', function(){ stopAllPollers(); state.cat='arme'; render(); });
+    grid.appendChild(arme);
+
+    var gloante = card('GLOANTE', 'Muniție pentru arme.', false, 'disponibil', DATA.gloante.glyph);
+    gloante.addEventListener('click', function(){ stopAllPollers(); state.cat='gloante'; render(); });
+    grid.appendChild(gloante);
+
+    var chat = card('DEEP WEB', 'Canal privat — vorbește cu ceilalți operatori conectați.', false, 'live', '◈');
+    chat.addEventListener('click', function(){ stopAllPollers(); state.section='chat'; render(); });
+    grid.appendChild(chat);
+
+    var ordersTag = (currentRole === 'lider' || currentRole === 'colider') ? 'comandă clan' : 'membru';
+    var orders = card('COMENZI', 'Cere echipament clanului sau aprobă cererile membrilor.', false, ordersTag, '☰');
+    orders.addEventListener('click', function(){ stopAllPollers(); state.section='orders'; state.ordersTab = (currentRole==='lider'||currentRole==='colider') ? 'aprobare' : 'noua'; render(); });
+    grid.appendChild(orders);
+
+    var rulotaTag = canEditRulota(currentRole) ? 'gestiune stoc' : 'trimite cerere';
+    var rulota = card('RULOTA', 'Cere cantitatea dorită din stocul rulotei sau gestionează stocul și cererile.', false, rulotaTag, '▤');
+    rulota.addEventListener('click', function(){ stopAllPollers(); state.section='rulota'; render(); });
+    grid.appendChild(rulota);
+
+    var act = card('ACTIVITATI', 'Vezi activitățile clanului și confirmă participarea.', false, canRunActivities(currentRole) ? 'organizator' : 'membru', '◎');
+    act.addEventListener('click', function(){ stopAllPollers(); state.section='activitati'; render(); });
+    grid.appendChild(act);
+
+    view.appendChild(grid);
+  }
+
+  function renderCategory(cat){
+    var d = DATA[cat];
+    echo('&gt; <b>ls</b> /' + d.label.toLowerCase());
+    var grid = document.createElement('div');
+    grid.className = 'grid fade-in';
+
+    Object.keys(d.items).forEach(function(key){
+      var it = d.items[key];
+      var c = card(it.name, it.desc, false, 'disponibil', it.glyph);
+      c.addEventListener('click', function(){ state.item = key; state.qty = 1; render(); });
+      grid.appendChild(c);
+    });
+
+    d.soon.forEach(function(label){
+      grid.appendChild(card(label, 'Se adaugă în curând la rotație.', true, 'coming soon', '…'));
+    });
+
+    view.appendChild(grid);
+  }
+
+  function renderRecipe(cat, itemKey){
+    var item = DATA[cat].items[itemKey];
+    var wrap = document.createElement('div');
+    wrap.className = 'fade-in';
+
+    echo('&gt; <b>cat</b> reteta.log');
+
+    var head = document.createElement('div');
+    head.className = 'recipe-head';
+    head.innerHTML = '<div><h2>'+item.name+'</h2><div class="sub">'+item.desc+'</div></div>';
+
+    var qtyBox = document.createElement('div');
+    qtyBox.className = 'qty-box';
+    qtyBox.innerHTML =
+      '<label>CANTITATE CRAFT</label>' +
+      '<button id="qty-minus" type="button" aria-label="scade">−</button>' +
+      '<input id="qty-input" type="number" min="1" max="99" value="'+state.qty+'">' +
+      '<button id="qty-plus" type="button" aria-label="crește">+</button>';
+    head.appendChild(qtyBox);
+    wrap.appendChild(head);
+
+    var rail = document.createElement('div');
+    rail.className = 'steps-rail';
+    wrap.appendChild(rail);
+
+    var totalsBox = document.createElement('div');
+    totalsBox.className = 'totals';
+    wrap.appendChild(totalsBox);
+
+    var back = document.createElement('div');
+    back.className = 'back-link';
+    back.innerHTML = '<span>$</span> cd .. &nbsp;(înapoi la ' + DATA[cat].label + ')';
+    back.addEventListener('click', function(){ state.item=null; render(); });
+    wrap.appendChild(back);
+
+    view.appendChild(wrap);
+
+    function draw(){
+      rail.innerHTML = '';
+      var totals = {};
+
+      item.steps.forEach(function(step){
+        var s = document.createElement('div');
+        s.className = 'step';
+        var lbl = document.createElement('div'); lbl.className='step-label'; lbl.textContent = step.label;
+        s.appendChild(lbl);
+
+        var ul = document.createElement('ul'); ul.className='mat-list';
+        step.mats.forEach(function(m){
+          var val = m.amt * state.qty;
+          totals[m.name] = (totals[m.name] || 0) + val;
+          var li = document.createElement('li');
+          li.innerHTML = '<span>'+m.name+'</span><span class="amt">×'+val+'</span>';
+          ul.appendChild(li);
+        });
+        s.appendChild(ul);
+
+        var y = document.createElement('div'); y.className='yields';
+        y.innerHTML = '<span>rezultat</span><b>'+ (step.yields.amt * state.qty) +' &times; '+step.yields.name+'</b>';
+        s.appendChild(y);
+
+        rail.appendChild(s);
+      });
+
+      totalsBox.innerHTML = '';
+      var tl = document.createElement('div'); tl.className='t-label'; tl.textContent = 'TOTAL MATERIALE NECESARE';
+      totalsBox.appendChild(tl);
+      var tul = document.createElement('ul');
+      Object.keys(totals).forEach(function(name){
+        var li = document.createElement('li');
+        li.innerHTML = '<span>'+name+'</span><span class="amt">×'+totals[name]+'</span>';
+        tul.appendChild(li);
+      });
+      totalsBox.appendChild(tul);
+    }
+    draw();
+
+    var qtyInput = qtyBox.querySelector('#qty-input');
+    qtyBox.querySelector('#qty-minus').addEventListener('click', function(){
+      state.qty = Math.max(1, state.qty - 1); qtyInput.value = state.qty; draw();
+    });
+    qtyBox.querySelector('#qty-plus').addEventListener('click', function(){
+      state.qty = Math.min(99, state.qty + 1); qtyInput.value = state.qty; draw();
+    });
+    qtyInput.addEventListener('input', function(){
+      var v = parseInt(qtyInput.value, 10);
+      if(isNaN(v) || v < 1) v = 1;
+      if(v > 99) v = 99;
+      state.qty = v; draw();
+    });
+  }
+
+  // ================= orders (comenzi) =================
+  function renderOrders(){
+    echo('&gt; <b>comenzi</b> clan_ops &nbsp;<span style="color:var(--text-dim)">(vizibil liderului și coliderilor)</span>');
+
+    var isBoss = (currentRole === 'lider' || currentRole === 'colider');
+    var wrap = document.createElement('div');
+    wrap.className = 'fade-in';
+
+    var tabs = document.createElement('div');
+    tabs.className = 'sub-tabs';
+    var tabDefs = isBoss
+      ? [{k:'aprobare', label:'cereri în așteptare'}, {k:'noua', label:'cerere nouă'}, {k:'istoric', label:'istoric'}]
+      : [{k:'noua', label:'cerere nouă'}, {k:'istoric', label:'cererile mele'}];
+    if(currentRole === 'lider'){ tabDefs.push({k:'stoc', label:'stoc echipament'}); tabDefs.push({k:'membri', label:'membri clan'}); }
+    tabDefs.forEach(function(td){
+      var b = document.createElement('button');
+      b.type='button'; b.className = 'sub-tab' + (state.ordersTab===td.k ? ' active':'');
+      b.textContent = td.label;
+      b.addEventListener('click', function(){ state.ordersTab = td.k; render(); });
+      tabs.appendChild(b);
+    });
+    wrap.appendChild(tabs);
+
+    var body = document.createElement('div');
+    wrap.appendChild(body);
+
+    var back = document.createElement('div');
+    back.className = 'back-link';
+    back.innerHTML = '<span>$</span> cd .. &nbsp;(înapoi la root)';
+    back.addEventListener('click', function(){ stopOrdersPoller(); state.section=null; render(); });
+    wrap.appendChild(back);
+
+    view.appendChild(wrap);
+
+    var selectedItem = null;
+    var orderQty = 1;
+
+    async function drawNewOrder(){
+      body.innerHTML = '';
+      var form = document.createElement('div');
+      form.className = 'order-form';
+      var lbl = document.createElement('div'); lbl.className='of-label'; lbl.textContent = 'SELECTEAZĂ ECHIPAMENT';
+      form.appendChild(lbl);
+
+      var stockMap = await loadStock();
+      var pick = document.createElement('div'); pick.className='item-pick';
+      ORDER_ITEMS.forEach(function(it){
+        var opt = document.createElement('div');
+        opt.className = 'item-opt' + (selectedItem === it.key ? ' sel' : '');
+        var stockVal = stockMap[it.key];
+        var stockLine = (stockVal !== undefined) ? '<div style="font-size:10.5px;color:var(--text-dim);margin-top:4px;">stoc: '+stockVal+'</div>' : '';
+        opt.innerHTML = '<div class="io-name">'+it.glyph+'  '+it.name+'</div><div class="io-price">'+fmtMoney(it.price)+'</div>'+stockLine;
+        opt.addEventListener('click', function(){ selectedItem = it.key; drawNewOrder(); });
+        pick.appendChild(opt);
+      });
+      form.appendChild(pick);
+
+      var qtyBox = document.createElement('div'); qtyBox.className='qty-box'; qtyBox.style.marginBottom='16px';
+      qtyBox.innerHTML =
+        '<label>CANTITATE</label>' +
+        '<button id="order-qty-minus" type="button" aria-label="scade">−</button>' +
+        '<input id="order-qty-input" type="number" min="1" max="99" value="'+orderQty+'">' +
+        '<button id="order-qty-plus" type="button" aria-label="crește">+</button>';
+      form.appendChild(qtyBox);
+
+      var note = document.createElement('div'); note.className='note-line';
+      note.innerHTML = '<span class="gt">&gt;</span><input id="order-note" type="text" maxlength="200" placeholder="notă opțională pentru lider/colider...">';
+      form.appendChild(note);
+
+      var submitBtn = document.createElement('button');
+      submitBtn.type='button'; submitBtn.className='auth-submit'; submitBtn.textContent = '> TRIMITE CEREREA';
+      submitBtn.style.width='auto'; submitBtn.style.padding='11px 26px';
+      submitBtn.addEventListener('click', async function(){
+        if(!selectedItem){ toast('alege un echipament întâi.', 'err'); return; }
+        submitBtn.disabled = true;
+        var noteVal = document.getElementById('order-note').value.trim();
+        var it = ORDER_ITEMS.filter(function(x){ return x.key===selectedItem; })[0];
+        var orders = await loadOrders();
+        orders.push({
+          id: Date.now() + '_' + Math.random().toString(36).slice(2,7),
+          user: currentUser, item: it.name, itemKey: it.key, qty: orderQty, price: it.price * orderQty,
+          note: noteVal, status:'pending', ts: Date.now(), decidedBy:null
+        });
+        await saveOrders(orders);
+        toast('cerere trimisă către lider/colider.', 'ok');
+        selectedItem = null; orderQty = 1;
+        submitBtn.disabled = false;
+        state.ordersTab = 'istoric';
+        render();
+      });
+      form.appendChild(submitBtn);
+      body.appendChild(form);
+
+      var qInput = qtyBox.querySelector('#order-qty-input');
+      qtyBox.querySelector('#order-qty-minus').addEventListener('click', function(){
+        orderQty = Math.max(1, orderQty - 1); qInput.value = orderQty;
+      });
+      qtyBox.querySelector('#order-qty-plus').addEventListener('click', function(){
+        orderQty = Math.min(99, orderQty + 1); qInput.value = orderQty;
+      });
+      qInput.addEventListener('input', function(){
+        var v = parseInt(qInput.value, 10);
+        if(isNaN(v) || v < 1) v = 1;
+        if(v > 99) v = 99;
+        orderQty = v;
+      });
+    }
+
+    function orderCard(o, showActions){
+      var c = document.createElement('div'); c.className='order-card';
+      var main = document.createElement('div'); main.className='oc-main';
+      var qtyLabel = (o.qty && o.qty > 1) ? ' &times;'+o.qty : '';
+      main.innerHTML =
+        '<div class="oc-item">'+o.item+qtyLabel+' &nbsp;<span style="color:var(--text-dim);font-size:11px;">— cerut de '+ensureGtaEmail(o.user)+'</span></div>' +
+        '<div class="oc-meta">'+new Date(o.ts).toLocaleString('ro-RO')+(o.decidedBy ? ' · decis de '+ensureGtaEmail(o.decidedBy) : '')+'</div>' +
+        (o.note ? '<div class="oc-note">"'+o.note+'"</div>' : '');
+      c.appendChild(main);
+
+      var price = document.createElement('span'); price.className='oc-price'; price.textContent = fmtMoney(o.price);
+      c.appendChild(price);
+
+      var chip = document.createElement('span'); chip.className='status-chip '+o.status;
+      chip.textContent = o.status === 'pending' ? 'în așteptare' : (o.status === 'approved' ? 'aprobat' : 'respins');
+      c.appendChild(chip);
+
+      if(showActions){
+        var act = document.createElement('div'); act.className='oc-actions';
+        var ok = document.createElement('button'); ok.type='button'; ok.textContent='✓ acceptă';
+        ok.addEventListener('click', async function(){ await decide(o.id, 'approved'); });
+        var no = document.createElement('button'); no.type='button'; no.className='reject'; no.textContent='✕ respinge';
+        no.addEventListener('click', async function(){ await decide(o.id, 'rejected'); });
+        act.appendChild(ok); act.appendChild(no);
+        c.appendChild(act);
+      }
+      return c;
+    }
+
+    async function decide(id, status){
+      var orders = await loadOrders();
+      var o = orders.filter(function(x){ return x.id === id; })[0];
+      if(!o) return;
+      o.status = status; o.decidedBy = currentUser;
+      await saveOrders(orders);
+      if(status === 'approved' && o.itemKey){
+        var s = await loadStock();
+        var cur = s[o.itemKey] !== undefined ? s[o.itemKey] : 0;
+        s[o.itemKey] = Math.max(0, cur - (o.qty || 1));
+        await saveStock(s);
+      }
+      toast(status === 'approved' ? 'cerere aprobată. stoc actualizat.' : 'cerere respinsă.', status==='approved'?'ok':'err');
+      drawCurrentTab(true);
+    }
+
+    async function drawApproval(){
+      var orders = await loadOrders();
+      var pending = orders.filter(function(o){ return o.status === 'pending'; }).sort(function(a,b){ return a.ts-b.ts; });
+      body.innerHTML = '';
+      if(pending.length === 0){
+        body.innerHTML = '<div class="empty-note">nicio cerere în așteptare momentan.</div>';
+        return;
+      }
+      pending.forEach(function(o){ body.appendChild(orderCard(o, true)); });
+    }
+
+    async function drawHistory(){
+      var orders = await loadOrders();
+      var mine = isBoss ? orders : orders.filter(function(o){ return o.user === currentUser; });
+      mine = mine.sort(function(a,b){ return b.ts-a.ts; });
+      body.innerHTML = '';
+      if(mine.length === 0){
+        body.innerHTML = '<div class="empty-note">niciun istoric încă.</div>';
+        return;
+      }
+      mine.forEach(function(o){ body.appendChild(orderCard(o, false)); });
+    }
+
+    async function drawMembers(){
+      var accounts = await loadAccounts();
+      body.innerHTML = '';
+      var t1 = document.createElement('div'); t1.className='section-title'; t1.textContent = 'GESTIONARE MEMBRI';
+      body.appendChild(t1);
+      Object.keys(accounts).forEach(function(email){
+        var role = accRole(accounts[email]);
+        var displayEmail = ensureGtaEmail(email);
+        var row = document.createElement('div'); row.className='member-row';
+        row.innerHTML = '<span class="mr-email">'+displayEmail+'</span><span class="rank-badge '+role+'"><span class="dotmini"></span>'+role+'</span>';
+        if(email !== currentUser && role !== 'lider'){
+          var sel = document.createElement('select');
+          sel.innerHTML = '<option value="membru"'+(role==='membru'?' selected':'')+'>membru</option><option value="colider"'+(role==='colider'?' selected':'')+'>colider</option><option value="coordonator"'+(role==='coordonator'?' selected':'')+'>coordonator</option>';
+          var btn = document.createElement('button'); btn.type='button'; btn.className='mr-btn'; btn.textContent='salvează';
+          btn.addEventListener('click', async function(){
+            var accs = await loadAccounts();
+            if(!accs[email]) return;
+            var pass = accPass(accs[email]);
+            accs[email] = { pass: pass, role: sel.value };
+            await saveAccounts(accs);
+            toast('rol actualizat pentru '+displayEmail+'.', 'ok');
+            drawMembers();
+          });
+          row.appendChild(sel); row.appendChild(btn);
+        }
+        body.appendChild(row);
+      });
+    }
+
+    async function drawStock(){
+      body.innerHTML = '';
+      var t1 = document.createElement('div'); t1.className='section-title'; t1.textContent = 'STOC ECHIPAMENT (vizibil doar liderului)';
+      body.appendChild(t1);
+      var stockMap = await loadStock();
+      ORDER_ITEMS.forEach(function(it){
+        var row = document.createElement('div'); row.className='stock-row';
+        var cur = stockMap[it.key] !== undefined ? stockMap[it.key] : 0;
+        row.innerHTML =
+          '<span class="sr-name">'+it.glyph+'  '+it.name+'</span>' +
+          '<span class="sr-current">stoc curent: <b>'+cur+'</b></span>' +
+          '<input type="number" min="0" value="'+cur+'">' +
+          '<button type="button" class="mr-btn">salvează</button>';
+        var input = row.querySelector('input');
+        var btn = row.querySelector('button');
+        btn.addEventListener('click', async function(){
+          var val = parseInt(input.value, 10);
+          if(isNaN(val) || val < 0) val = 0;
+          var s = await loadStock();
+          s[it.key] = val;
+          await saveStock(s);
+          toast('stoc actualizat pentru '+it.name+'.', 'ok');
+          drawStock();
+        });
+        body.appendChild(row);
+      });
+    }
+
+    function drawCurrentTab(){
+      if(state.ordersTab === 'noua') drawNewOrder();
+      else if(state.ordersTab === 'aprobare') drawApproval();
+      else if(state.ordersTab === 'stoc') drawStock();
+      else if(state.ordersTab === 'membri') drawMembers();
+      else drawHistory();
+    }
+
+    drawCurrentTab();
+    stopOrdersPoller();
+    if(state.ordersTab === 'aprobare' || state.ordersTab === 'istoric'){
+      ordersPoller = setInterval(function(){
+        if(state.ordersTab === 'aprobare') drawApproval();
+        else if(state.ordersTab === 'istoric') drawHistory();
+      }, 4000);
+    }
+  }
+
+  // ================= rulota (evidenta stoc + cereri) =================
+  async function loadRulotaOrders(){ return ensureArray(await loadJSON('bzone_rulota_orders', [])); }
+  function saveRulotaOrders(arr){ return saveJSON('bzone_rulota_orders', arr); }
+
+  function renderRulota(){
+    var canApprove = canEditRulota(currentRole);
+    echo('&gt; <b>rulota</b> evidenta_stoc &nbsp;<span style="color:var(--text-dim)">('+(canApprove ? 'gestiune stoc și cereri' : 'poți trimite cereri de cantitate') +')</span>');
+
+    var wrap = document.createElement('div');
+    wrap.className = 'fade-in';
+
+    if(!state.rulotaTab) state.rulotaTab = canApprove ? 'aprobare' : 'noua';
+
+    var tabs = document.createElement('div');
+    tabs.className = 'sub-tabs';
+    var tabDefs = canApprove
+      ? [{k:'aprobare', label:'cereri în așteptare'}, {k:'noua', label:'cerere nouă'}, {k:'stoc', label:'stoc rulotă'}, {k:'istoric', label:'istoric'}]
+      : [{k:'noua', label:'cerere nouă'}, {k:'istoric', label:'cererile mele'}];
+    tabDefs.forEach(function(td){
+      var b = document.createElement('button');
+      b.type='button'; b.className = 'sub-tab' + (state.rulotaTab===td.k ? ' active':'');
+      b.textContent = td.label;
+      b.addEventListener('click', function(){ state.rulotaTab = td.k; render(); });
+      tabs.appendChild(b);
+    });
+    wrap.appendChild(tabs);
+
+    var body = document.createElement('div');
+    wrap.appendChild(body);
+
+    var back = document.createElement('div');
+    back.className = 'back-link';
+    back.innerHTML = '<span>$</span> cd .. &nbsp;(înapoi la root)';
+    back.addEventListener('click', function(){ stopRulotaPoller(); state.section=null; render(); });
+    wrap.appendChild(back);
+
+    view.appendChild(wrap);
+
+    var selectedItem = null;
+    var reqQty = 1;
+
+    async function drawNewRequest(){
+      body.innerHTML = '';
+      var stockMap = await loadRulota();
+      var form = document.createElement('div');
+      form.className = 'order-form';
+      var lbl = document.createElement('div'); lbl.className='of-label'; lbl.textContent = 'SELECTEAZĂ PRODUS';
+      form.appendChild(lbl);
+
+      var pick = document.createElement('div'); pick.className='item-pick';
+      RULOTA_ITEMS.forEach(function(it){
+        var opt = document.createElement('div');
+        opt.className = 'item-opt' + (selectedItem === it.key ? ' sel' : '');
+        var cur = stockMap[it.key] !== undefined ? stockMap[it.key] : 0;
+        opt.innerHTML = '<div class="io-name">'+it.glyph+'  '+it.name+'</div><div style="font-size:10.5px;color:var(--text-dim);margin-top:4px;">stoc: '+cur+'</div>';
+        opt.addEventListener('click', function(){ selectedItem = it.key; drawNewRequest(); });
+        pick.appendChild(opt);
+      });
+      form.appendChild(pick);
+
+      var qtyBox = document.createElement('div'); qtyBox.className='qty-box'; qtyBox.style.marginBottom='16px';
+      qtyBox.innerHTML =
+        '<label>CANTITATE</label>' +
+        '<button id="rul-qty-minus" type="button" aria-label="scade">−</button>' +
+        '<input id="rul-qty-input" type="number" min="1" max="999" value="'+reqQty+'">' +
+        '<button id="rul-qty-plus" type="button" aria-label="crește">+</button>';
+      form.appendChild(qtyBox);
+
+      var note = document.createElement('div'); note.className='note-line';
+      note.innerHTML = '<span class="gt">&gt;</span><input id="rul-note" type="text" maxlength="200" placeholder="notă opțională...">';
+      form.appendChild(note);
+
+      var submitBtn = document.createElement('button');
+      submitBtn.type='button'; submitBtn.className='auth-submit'; submitBtn.textContent = '> TRIMITE CEREREA';
+      submitBtn.style.width='auto'; submitBtn.style.padding='11px 26px';
+      submitBtn.addEventListener('click', async function(){
+        if(!selectedItem){ toast('alege un produs întâi.', 'err'); return; }
+        submitBtn.disabled = true;
+        var noteVal = document.getElementById('rul-note').value.trim();
+        var it = RULOTA_ITEMS.filter(function(x){ return x.key===selectedItem; })[0];
+        var reqs = await loadRulotaOrders();
+        reqs.push({
+          id: Date.now() + '_' + Math.random().toString(36).slice(2,7),
+          user: currentUser, item: it.name, itemKey: it.key, qty: reqQty,
+          note: noteVal, status:'pending', ts: Date.now(), decidedBy:null
+        });
+        await saveRulotaOrders(reqs);
+        toast('cerere trimisă.', 'ok');
+        selectedItem = null; reqQty = 1;
+        submitBtn.disabled = false;
+        state.rulotaTab = 'istoric';
+        render();
+      });
+      form.appendChild(submitBtn);
+      body.appendChild(form);
+
+      var qInput = qtyBox.querySelector('#rul-qty-input');
+      qtyBox.querySelector('#rul-qty-minus').addEventListener('click', function(){
+        reqQty = Math.max(1, reqQty - 1); qInput.value = reqQty;
+      });
+      qtyBox.querySelector('#rul-qty-plus').addEventListener('click', function(){
+        reqQty = Math.min(999, reqQty + 1); qInput.value = reqQty;
+      });
+      qInput.addEventListener('input', function(){
+        var v = parseInt(qInput.value, 10);
+        if(isNaN(v) || v < 1) v = 1;
+        if(v > 999) v = 999;
+        reqQty = v;
+      });
+    }
+
+    function reqCard(o, showActions){
+      var c = document.createElement('div'); c.className='order-card';
+      var main = document.createElement('div'); main.className='oc-main';
+      main.innerHTML =
+        '<div class="oc-item">'+o.item+' &times;'+o.qty+' &nbsp;<span style="color:var(--text-dim);font-size:11px;">— cerut de '+ensureGtaEmail(o.user)+'</span></div>' +
+        '<div class="oc-meta">'+new Date(o.ts).toLocaleString('ro-RO')+(o.decidedBy ? ' · decis de '+ensureGtaEmail(o.decidedBy) : '')+'</div>' +
+        (o.note ? '<div class="oc-note">"'+o.note+'"</div>' : '');
+      c.appendChild(main);
+
+      var chip = document.createElement('span'); chip.className='status-chip '+o.status;
+      chip.textContent = o.status === 'pending' ? 'în așteptare' : (o.status === 'approved' ? 'aprobat' : 'respins');
+      c.appendChild(chip);
+
+      if(showActions){
+        var act = document.createElement('div'); act.className='oc-actions';
+        var ok = document.createElement('button'); ok.type='button'; ok.textContent='✓ acceptă';
+        ok.addEventListener('click', async function(){ await decideRequest(o.id, 'approved'); });
+        var no = document.createElement('button'); no.type='button'; no.className='reject'; no.textContent='✕ respinge';
+        no.addEventListener('click', async function(){ await decideRequest(o.id, 'rejected'); });
+        act.appendChild(ok); act.appendChild(no);
+        c.appendChild(act);
+      }
+      return c;
+    }
+
+    async function decideRequest(id, status){
+      var reqs = await loadRulotaOrders();
+      var o = reqs.filter(function(x){ return x.id === id; })[0];
+      if(!o) return;
+      o.status = status; o.decidedBy = currentUser;
+      await saveRulotaOrders(reqs);
+      if(status === 'approved' && o.itemKey){
+        var s = await loadRulota();
+        var cur = s[o.itemKey] !== undefined ? s[o.itemKey] : 0;
+        s[o.itemKey] = Math.max(0, cur - (o.qty || 1));
+        await saveRulota(s);
+      }
+      toast(status === 'approved' ? 'cerere aprobată. stoc actualizat.' : 'cerere respinsă.', status==='approved'?'ok':'err');
+      drawCurrentRulotaTab();
+    }
+
+    async function drawApproval(){
+      var reqs = await loadRulotaOrders();
+      var pending = reqs.filter(function(o){ return o.status === 'pending'; }).sort(function(a,b){ return a.ts-b.ts; });
+      body.innerHTML = '';
+      if(pending.length === 0){
+        body.innerHTML = '<div class="empty-note">nicio cerere în așteptare momentan.</div>';
+        return;
+      }
+      pending.forEach(function(o){ body.appendChild(reqCard(o, true)); });
+    }
+
+    async function drawHistory(){
+      var reqs = await loadRulotaOrders();
+      var mine = canApprove ? reqs : reqs.filter(function(o){ return o.user === currentUser; });
+      mine = mine.sort(function(a,b){ return b.ts-a.ts; });
+      body.innerHTML = '';
+      if(mine.length === 0){
+        body.innerHTML = '<div class="empty-note">niciun istoric încă.</div>';
+        return;
+      }
+      mine.forEach(function(o){ body.appendChild(reqCard(o, false)); });
+    }
+
+    async function drawStockTab(){
+      body.innerHTML = '';
+      var stockMap = await loadRulota();
+      RULOTA_ITEMS.forEach(function(it){
+        var row = document.createElement('div'); row.className='stock-row';
+        var cur = stockMap[it.key] !== undefined ? stockMap[it.key] : 0;
+        row.innerHTML =
+          '<span class="sr-name">'+it.glyph+'  '+it.name+'</span>' +
+          '<span class="sr-current">stoc curent: <b>'+cur+'</b></span>' +
+          '<input type="number" min="0" value="'+cur+'">' +
+          '<button type="button" class="mr-btn">salvează</button>';
+        var input = row.querySelector('input');
+        var btn = row.querySelector('button');
+        btn.addEventListener('click', async function(){
+          var val = parseInt(input.value, 10);
+          if(isNaN(val) || val < 0) val = 0;
+          var s = await loadRulota();
+          s[it.key] = val;
+          await saveRulota(s);
+          toast('stoc actualizat pentru '+it.name+'.', 'ok');
+          drawStockTab();
+        });
+        body.appendChild(row);
+      });
+    }
+
+    function drawCurrentRulotaTab(){
+      if(state.rulotaTab === 'noua') drawNewRequest();
+      else if(state.rulotaTab === 'aprobare') drawApproval();
+      else if(state.rulotaTab === 'stoc') drawStockTab();
+      else drawHistory();
+    }
+
+    drawCurrentRulotaTab();
+    stopRulotaPoller();
+    if(state.rulotaTab === 'aprobare' || state.rulotaTab === 'istoric'){
+      rulotaPoller = setInterval(function(){
+        if(state.rulotaTab === 'aprobare') drawApproval();
+        else if(state.rulotaTab === 'istoric') drawHistory();
+      }, 4000);
+    }
+  }
+
+  // ================= activitati =================
+  function renderActivities(){
+    var canRun = canRunActivities(currentRole);
+    echo('&gt; <b>activitati</b> clan_events &nbsp;<span style="color:var(--text-dim)">(vizibil tuturor membrilor)</span>');
+
+    var wrap = document.createElement('div');
+    wrap.className = 'fade-in';
+
+    if(canRun){
+      var newBtn = document.createElement('button');
+      newBtn.type = 'button'; newBtn.className = 'auth-submit';
+      newBtn.style.width = 'auto'; newBtn.style.padding = '10px 22px'; newBtn.style.marginBottom = '18px';
+      newBtn.textContent = state.actEditing ? '> ÎNCHIDE FORMULARUL' : '> ACTIVITATE NOUĂ';
+      newBtn.addEventListener('click', function(){ state.actEditing = !state.actEditing; render(); });
+      wrap.appendChild(newBtn);
+
+      if(state.actEditing){
+        var form = document.createElement('div');
+        form.className = 'order-form';
+        form.innerHTML =
+          '<div class="of-label">ACTIVITATE NOUĂ</div>' +
+          '<div class="note-line"><span class="gt">&gt;</span><input id="act-title" type="text" maxlength="100" placeholder="titlu activitate..."></div>' +
+          '<div class="note-line" style="align-items:flex-start;"><span class="gt">&gt;</span><textarea id="act-desc" rows="3" maxlength="500" placeholder="detalii (loc, oră, cerințe)..." style="flex:1;background:transparent;border:none;color:var(--text);font-family:var(--font);font-size:13px;resize:vertical;"></textarea></div>';
+        var submitBtn = document.createElement('button');
+        submitBtn.type = 'button'; submitBtn.className = 'auth-submit';
+        submitBtn.style.width = 'auto'; submitBtn.style.padding = '11px 26px';
+        submitBtn.textContent = '> PUBLICĂ ACTIVITATEA';
+        submitBtn.addEventListener('click', async function(){
+          var title = document.getElementById('act-title').value.trim();
+          var desc = document.getElementById('act-desc').value.trim();
+          if(!title){ toast('adaugă un titlu.', 'err'); return; }
+          submitBtn.disabled = true;
+          var acts = await loadActivities();
+          acts.push({
+            id: Date.now() + '_' + Math.random().toString(36).slice(2,7),
+            title: title, desc: desc, createdBy: currentUser, ts: Date.now(),
+            participants: {}
+          });
+          await saveActivities(acts);
+          toast('activitate publicată.', 'ok');
+          state.actEditing = false;
+          render();
+        });
+        form.appendChild(submitBtn);
+        wrap.appendChild(form);
+      }
+    }
+
+    var body = document.createElement('div');
+    wrap.appendChild(body);
+
+    var back = document.createElement('div');
+    back.className = 'back-link';
+    back.innerHTML = '<span>$</span> cd .. &nbsp;(înapoi la root)';
+    back.addEventListener('click', function(){ stopActPoller(); state.actEditing = false; state.section=null; render(); });
+    wrap.appendChild(back);
+
+    view.appendChild(wrap);
+
+    async function setParticipation(id, going){
+      var acts = await loadActivities();
+      var a = acts.filter(function(x){ return x.id === id; })[0];
+      if(!a) return;
+      if(!a.participants) a.participants = {};
+      a.participants[currentUser] = going;
+      await saveActivities(acts);
+      toast(going ? 'Participare confirmată!' : 'Te-ai retras din activitate.', going ? 'ok' : 'warn');
+      draw();
+    }
+
+    async function draw(){
+      body.innerHTML = '';
+      var acts = await loadActivities();
+      acts = acts.sort(function(a,b){ return b.ts - a.ts; });
+      if(acts.length === 0){
+        body.innerHTML = '<div class="empty-note">nicio activitate publicată încă.</div>';
+        return;
+      }
+      acts.forEach(function(a){
+        var parts = a.participants || {};
+        var mine = parts[currentUser];
+        var goingCount = Object.keys(parts).filter(function(k){ return parts[k] === true; }).length;
+        var c = document.createElement('div'); c.className = 'act-card';
+        c.innerHTML =
+          '<div class="act-title">'+a.title+'</div>' +
+          '<div class="act-meta">creat de '+ensureGtaEmail(a.createdBy)+' · '+new Date(a.ts).toLocaleString('ro-RO')+'</div>' +
+          (a.desc ? '<div class="act-desc"></div>' : '');
+        if(a.desc) c.querySelector('.act-desc').textContent = a.desc;
+
+        var act = document.createElement('div'); act.className = 'act-actions';
+        var yes = document.createElement('button'); yes.type='button';
+        yes.textContent = '✓ particip';
+        if(mine === true) yes.classList.add('active-state');
+        yes.addEventListener('click', function(){ setParticipation(a.id, true); });
+        var no = document.createElement('button'); no.type='button'; no.className='out';
+        no.textContent = '✕ nu pot participa / mă retrag';
+        if(mine === false) no.classList.add('active-state');
+        no.addEventListener('click', function(){ setParticipation(a.id, false); });
+        act.appendChild(yes); act.appendChild(no);
+
+        if(canRun || a.createdBy === currentUser){
+          var del = document.createElement('button');
+          del.type = 'button';
+          del.className = 'out';
+          del.textContent = '🗑 șterge';
+          del.addEventListener('click', async function(){
+            if(confirm('Sigur vrei să ștergi această activitate?')){
+              var acts = await loadActivities();
+              acts = acts.filter(function(x){ return x.id !== a.id; });
+              await saveActivities(acts);
+              toast('Activitate ștearsă.', 'warn');
+              draw();
+            }
+          });
+          act.appendChild(del);
+        }
+
+        var cnt = document.createElement('span'); cnt.className='act-count'; cnt.textContent = goingCount + ' confirmați';
+        act.appendChild(cnt);
+        c.appendChild(act);
+
+        var goingNames = Object.keys(parts).filter(function(k){ return parts[k] === true; });
+        var declinedNames = Object.keys(parts).filter(function(k){ return parts[k] === false; });
+        if(goingNames.length || declinedNames.length){
+          var list = document.createElement('div'); list.className = 'act-list';
+          if(goingNames.length){
+            var gl = document.createElement('div'); gl.style.marginBottom = declinedNames.length ? '4px' : '0';
+            gl.innerHTML = '<span style="color:var(--green);">participă:</span> ' + goingNames.map(ensureGtaEmail).join(', ');
+            list.appendChild(gl);
+          }
+          if(declinedNames.length){
+            var dl = document.createElement('div');
+            dl.innerHTML = '<span style="color:var(--red);">nu participă:</span> ' + declinedNames.map(ensureGtaEmail).join(', ');
+            list.appendChild(dl);
+          }
+          c.appendChild(list);
+        }
+
+        body.appendChild(c);
+      });
+    }
+    draw();
+    stopActPoller();
+    actPoller = setInterval(draw, 4000);
+  }
+
+  // ================= chat =================
+  function renderChat(){
+    echo('&gt; <b>connect</b> deep_web/canal_privat &nbsp;<span style="color:var(--text-dim)">(vizibil tuturor celor care deschid acest terminal)</span>');
+
+    var wrap = document.createElement('div');
+    wrap.className = 'fade-in chat-wrap';
+
+    var chatLog = document.createElement('div');
+    chatLog.className = 'chat-log';
+    chatLog.innerHTML = '<div class="chat-empty">se încarcă mesajele...</div>';
+    wrap.appendChild(chatLog);
+
+    var row = document.createElement('div');
+    row.className = 'chat-input-row';
+    row.innerHTML =
+      '<input id="chat-input" type="text" placeholder="scrie un mesaj..." maxlength="500" autocomplete="off">' +
+      '<button id="chat-send" type="button">&gt; TRIMITE</button>';
+    wrap.appendChild(row);
+
+    var status = document.createElement('div');
+    status.className = 'chat-status';
+    var cloudDbActive = getCloudDbUrl();
+    status.textContent = cloudDbActive
+      ? 'conectat ca ' + currentUser + ' · sincronizare live prin Cloud DB'
+      : 'conectat ca ' + currentUser + ' · salvat în browser (localStorage). Apasă pe "db local" din bara de sus pentru a conecta Cloud DB.';
+    wrap.appendChild(status);
+
+    var back = document.createElement('div');
+    back.className = 'back-link';
+    back.innerHTML = '<span>$</span> cd .. &nbsp;(înapoi la root)';
+    back.addEventListener('click', function(){ stopChatPoller(); state.section=null; render(); });
+    wrap.appendChild(back);
+
+    view.appendChild(wrap);
+
+    function fmtTime(ts){
+      var d = new Date(ts);
+      return pad(d.getHours())+':'+pad(d.getMinutes());
+    }
+
+    var lastCount = -1;
+    async function refresh(force){
+      var msgs = await loadMessages();
+      if(!force && msgs.length === lastCount) return;
+      lastCount = msgs.length;
+      var accounts = await loadAccounts();
+      var wasNearBottom = chatLog.scrollTop + chatLog.clientHeight >= chatLog.scrollHeight - 30;
+      chatLog.innerHTML = '';
+      if(msgs.length === 0){
+        chatLog.innerHTML = '<div class="chat-empty">niciun mesaj încă. fii primul.</div>';
+      } else {
+        msgs.slice(-100).forEach(function(m){
+          var mDiv = document.createElement('div');
+          mDiv.className = 'msg';
+          var whoEmail = ensureGtaEmail(m.user);
+          var whoCls = whoEmail === currentUser ? 'who me' : 'who';
+          var role = accounts[whoEmail] ? accRole(accounts[whoEmail]) : 'membru';
+          var badgeHtml = role !== 'membru' ? '<span class="rank-badge '+role+'" style="margin-left:6px;"><span class="dotmini"></span>'+role+'</span>' : '';
+          mDiv.innerHTML =
+            '<span class="'+whoCls+'">'+whoEmail+'</span>' + badgeHtml +
+            '<span class="when">'+fmtTime(m.ts)+'</span><br>' +
+            '<span class="body"></span>';
+          mDiv.querySelector('.body').textContent = m.text;
+          chatLog.appendChild(mDiv);
+        });
+      }
+      if(force || wasNearBottom){ chatLog.scrollTop = chatLog.scrollHeight; }
+    }
+    refresh(true);
+    stopChatPoller();
+    chatPoller = setInterval(function(){ refresh(false); }, 3000);
+
+    var input = document.getElementById('chat-input');
+    var sendBtn = document.getElementById('chat-send');
+
+    var sending = false;
+    async function send(){
+      if(sending) return;
+      var text = input.value.trim();
+      if(!text) return;
+      sending = true; sendBtn.disabled = true;
+      input.value = '';
+      try{
+        var msgs = await loadMessages();
+        msgs.push({user: currentUser, text: text, ts: Date.now()});
+        if(msgs.length > 300) msgs = msgs.slice(-300);
+        var ok = await saveMessages(msgs);
+        if(ok === false){ toast('mesajul nu a putut fi salvat.', 'err'); }
+        await refresh(true);
+      }catch(err){
+        toast('eroare la trimiterea mesajului.', 'err');
+      }finally{
+        sending = false; sendBtn.disabled = false; input.focus();
+      }
+    }
+    sendBtn.addEventListener('click', send);
+    input.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){ e.preventDefault(); send(); }
+    });
+  }
+})();
+</script>
 </body>
 </html>
