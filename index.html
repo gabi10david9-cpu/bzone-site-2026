@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>B_ZONE // SECURE SHELL</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div id="crt">
+  <div id="frame">
+    <div id="watermark"></div>
+    <canvas id="matrix"></canvas>
+
+    <div class="titlebar">
+      <span class="dot r"></span><span class="dot a"></span><span class="dot g"></span>
+      <span class="path">bzone_terminal — <b id="tb-state">secure_shell</b></span>
+      <span class="rank-pill" id="tb-rank"></span>
+      <div class="stats">
+        <span>link <b id="stat-link">stabil</b></span>
+        <span>ping <b id="stat-ping">—</b> ms</span>
+        <span>uptime <b id="stat-uptime">00:00</b></span>
+        <span class="sig"><i></i><i></i><i></i><i></i></span>
+      </div>
+    </div>
+
+    <div id="stage">
+      <div id="boot">
+        <div id="boot-log"></div>
+
+        <div id="auth-wrap">
+          <div class="auth-box">
+            <div class="auth-tabs">
+              <button class="auth-tab active" id="tab-login" type="button">AUTENTIFICARE</button>
+              <button class="auth-tab" id="tab-register" type="button">CONT NOU</button>
+            </div>
+
+            <form id="form-login">
+              <div class="field">
+                <label>EMAIL</label>
+                <div class="input-line"><span class="gt">&gt;</span><input type="email" id="login-email" placeholder="operator@mail.com" autocomplete="off" required></div>
+              </div>
+              <div class="field">
+                <label>PAROLĂ</label>
+                <div class="input-line"><span class="gt">&gt;</span><input type="password" id="login-pass" placeholder="••••••••" autocomplete="off" required></div>
+              </div>
+              <div class="auth-msg" id="login-msg"></div>
+              <button type="submit" class="auth-submit" id="login-submit">&gt; AUTENTIFICĂ-TE</button>
+            </form>
+
+            <form id="form-register" style="display:none;">
+              <div class="field">
+                <label>EMAIL</label>
+                <div class="input-line"><span class="gt">&gt;</span><input type="email" id="reg-email" placeholder="operator@mail.com" autocomplete="off" required></div>
+              </div>
+              <div class="field">
+                <label>PAROLĂ</label>
+                <div class="input-line"><span class="gt">&gt;</span><input type="password" id="reg-pass" placeholder="min. 6 caractere" autocomplete="off" required></div>
+              </div>
+              <div class="field">
+                <label>CONFIRMĂ PAROLA</label>
+                <div class="input-line"><span class="gt">&gt;</span><input type="password" id="reg-pass2" placeholder="••••••••" autocomplete="off" required></div>
+              </div>
+              <div class="auth-msg" id="reg-msg"></div>
+              <button type="submit" class="auth-submit" id="reg-submit">&gt; CREEAZĂ CONT</button>
+            </form>
+
+            <div class="auth-note">primul cont creat vreodată devine automat <b style="color:var(--amber)">LIDER</b>. restul pornesc ca <b>MEMBRU</b>. conturile, gradele, comenzile, acțiunile, rulota și mesajele se salvează într-o bază de date reală pe server — rămân disponibile oricând, de pe orice dispozitiv, indiferent de Claude sau de browser.</div>
+          </div>
+        </div>
+
+        <div id="enter-wrap">
+          <button id="enter-btn">&gt; ENTER</button>
+          <div id="enter-hint">apasă ENTER pentru a continua sesiunea</div>
+        </div>
+      </div>
+
+      <div id="app">
+        <div class="app-head">
+          <pre class="logo"> ____    _____ ___  _   _ _____ 
+| __ )  |__  // _ \| \ | | ____|
+|  _ \    / // | | |  \| |  _|  
+| |_) |  / /_| |_| | |\  | |___ 
+|____/  /____|\___/|_| \_|_____|  <span style="color:var(--text-dim)">black market uplink</span></pre>
+        </div>
+        <div id="crumbs"></div>
+        <div id="view"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
